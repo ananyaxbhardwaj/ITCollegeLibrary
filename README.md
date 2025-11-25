@@ -1,19 +1,8 @@
-# IT College Library — Streamlit Demo
+Run this on your laptop! 
 
-## 🚀 Run on macOS
-```bash
+git clone https://github.com/ananyaxbhardwaj/ITCollegeLibrary.git
 cd ITCollegeLibrary
-source venv/bin/activate
+python -m venv venv
+venv\Scripts\activate
 pip install -r requirements.txt
 streamlit run app.py
-
-cat > README.md <<'MD'
-# IT College Library — Streamlit Demo
-
-## 🚀 Run on macOS
-```bash
-cd ITCollegeLibrary
-source venv/bin/activate
-pip install -r requirements.txt
-streamlit run app.py
-
