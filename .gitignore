@@ -1,0 +1,37 @@
+# Virtual environment
+venv/
+env/
+.venv/
+
+# Python caches / bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# IDE/editor folders
+.vscode/
+.idea/
+
+# macOS files
+.DS_Store
+
+# Data and DB files
+data/
+*.sqlite3
+library.db
+
+# Environment files
+.env
+.env.* 
+
+# Streamlit specific
+.streamlit/
+
+# Logs
+*.log
+
+# Packaging
+dist/
+build/
+*.egg-info/
