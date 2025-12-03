@@ -129,8 +129,6 @@ def dashboard_page():
     c5.metric("Reservations", stats["reservations"])
     c6.metric("Overdue Loans", stats["overdue_count"])
 
-    # Loan tracking removed — nothing to display here.
-
 
 # ---------------------- CATALOG PAGE ----------------------
 def catalog_page():
@@ -158,16 +156,13 @@ def catalog_page():
 
     st.dataframe(df, use_container_width=True)
 
-    # Select Book
     st.markdown("### Edit or Delete Book")
-    # Use selectbox with objects and format_func so we get the Book back directly
     select = st.selectbox(
         "Choose a Book",
         options=filtered,
         format_func=lambda b: f"{short_id(b.item_id)} — {b.title}" if b else "",
     )
 
-    # Use session state to show edit modal after Edit button is clicked
     if "editing_book_id" not in st.session_state:
         st.session_state["editing_book_id"] = None
 
@@ -181,9 +176,8 @@ def catalog_page():
         if col2.button("Delete Book"):
             LibraryEngine.delete_book(book.item_id)
             st.success("Book deleted.")
-            st.experimental_rerun()
+            st.rerun()
 
-    # If an edit was requested, render the edit modal for that book
     if st.session_state.get("editing_book_id"):
         edit_id = st.session_state["editing_book_id"]
         edit_book = next((b for b in books if b.item_id == edit_id), None)
@@ -201,7 +195,6 @@ def edit_book_modal(book: Book):
         author = st.text_input("Author", value=book.author)
         publisher = st.text_input("Publisher", value=book.publisher)
         year = st.number_input("Year", value=book.year, min_value=1900, max_value=2100)
-        # Ensure the book's current category is available in the select options
         categories = ["Computer Science", "Electronics", "Mechanical", "Mathematics", "Electrical"]
         if book.category and book.category not in categories:
             categories.insert(0, book.category)
@@ -220,13 +213,9 @@ def edit_book_modal(book: Book):
             category=category,
             copies=int(copies)
         )
-        # clear editing state then rerun
-        try:
-            st.session_state["editing_book_id"] = None
-        except Exception:
-            pass
+        st.session_state["editing_book_id"] = None
         st.success("Book updated.")
-        st.experimental_rerun()
+        st.rerun()
 
 
 # ---------------------- ADD BOOK ----------------------
@@ -256,7 +245,7 @@ def add_book_page():
         books.append(new)
         LibraryEngine.save_books(books)
         st.success(f"Book added successfully (ID: {short_id(new.item_id)})")
-        st.experimental_rerun()
+        st.rerun()
 
 
 # ---------------------- USERS PAGE ----------------------
@@ -264,15 +253,10 @@ def users_page():
     st.markdown("<div class='section-header'>Users</div>", unsafe_allow_html=True)
     
     users = LibraryEngine.list_users()
-    idmap = id_to_title_map()
-
     table_rows = []
     for u in users:
         borrowed_names = [short_id(b) for b in u.borrowed]
-
-        reserved_names = []
-        for r in getattr(u, "reserved", []):
-            reserved_names.append(short_id(r))
+        reserved_names = [short_id(r) for r in getattr(u, "reserved", [])]
         table_rows.append({
             "Name": u.name,
             "Roll No": u.roll_no,
@@ -289,44 +273,38 @@ def users_page():
         convert_to_csv(table_rows),
         "users_export.csv"
     )
-    # Unreserve section: allow removing a reservation from a user
-    st.markdown("### Manage Reservations")
 
-    if not users:
-        st.info("No users available.")
-    else:
-        sel = st.selectbox("Select User to manage reservations", [f"{u.roll_no} - {u.name}" for u in users])
+    st.markdown("### Manage Reservations")
+    if users:
+        sel = st.selectbox("Select User", [f"{u.roll_no} - {u.name}" for u in users])
         roll = sel.split(" - ")[0]
         user = next(u for u in users if u.roll_no == roll)
-
         reserved_list = [f"{short_id(r)} — {r}" for r in getattr(user, "reserved", [])]
+
         if reserved_list:
-            choice = st.selectbox("Reserved Items", reserved_list)
+            choice = st.selectbox("Reserved Items", reserved_list, key="reserved_choice")
             res_id = choice.split(" — ")[1]
             if st.button("Unreserve"):
                 LibraryEngine.unreserve_book(res_id, roll)
                 st.success("Reservation removed.")
-                st.experimental_rerun()
+                st.rerun()
         else:
             st.info("This user has no reservations.")
 
-    # Return Book section
     st.markdown("### Return Book")
-    if not users:
-        st.info("No users available.")
-    else:
-        sel_ret = st.selectbox("Select User to return a book", [f"{u.roll_no} - {u.name}" for u in users], key="ret_user")
+    if users:
+        sel_ret = st.selectbox("Select User", [f"{u.roll_no} - {u.name}" for u in users], key="ret_user")
         roll_ret = sel_ret.split(" - ")[0]
         user_ret = next(u for u in users if u.roll_no == roll_ret)
+        borrow_list = [f"{short_id(r)} — {r}" for r in user_ret.borrowed]
 
-        borrow_list = [f"{short_id(book_id)} — {book_id}" for book_id in user_ret.borrowed]
         if borrow_list:
             choice_ret = st.selectbox("Borrowed Books", borrow_list, key="ret_borrowed")
             book_id_ret = choice_ret.split(" — ")[1]
             if st.button("Return Book", key="return_btn"):
                 LibraryEngine.return_book(book_id_ret, roll_ret)
                 st.success("Book returned successfully.")
-                st.experimental_rerun()
+                st.rerun()
         else:
             st.info("This user has no borrowed books.")
 
@@ -347,7 +325,6 @@ def issue_page():
 
     if st.button("Issue"):
         roll = user_choice.split(" - ")[0]
-        # book_choice contains the short id; map it back to the full item_id
         short = book_choice.split(" - ")[0]
         book_obj = next((b for b in books if short_id(b.item_id) == short), None)
         if not book_obj:
@@ -355,6 +332,7 @@ def issue_page():
         else:
             LibraryEngine.issue_book(book_obj.item_id, roll)
             st.success("Book issued successfully.")
+            st.rerun()
 
 
 # ---------------------- RESERVE PAGE ----------------------
@@ -375,6 +353,7 @@ def reserve_page():
         else:
             LibraryEngine.reserve_book(book_obj.item_id, roll)
             st.success("Book reserved.")
+            st.rerun()
 
 
 # ---------------------- CSV Export Helper ----------------------
