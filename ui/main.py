@@ -181,7 +181,8 @@ def catalog_page():
         if col2.button("Delete Book"):
             LibraryEngine.delete_book(book.item_id)
             st.success("Book deleted.")
-            st.experimental_rerun()
+            st.rerun()
+
 
     # If an edit was requested, render the edit modal for that book
     if st.session_state.get("editing_book_id"):
