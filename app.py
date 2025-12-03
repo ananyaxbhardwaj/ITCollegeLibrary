@@ -1,6 +1,6 @@
 # app.py
 import streamlit as st
-from ui import main
+from ui.main import main_ui
 
 # ---------------- PAGE CONFIG ----------------
 st.set_page_config(
@@ -12,4 +12,4 @@ st.set_page_config(
 
 # ---------------- RUN THE APP ----------------
 if __name__ == "__main__":
-    main.main_ui()
+    main_ui()
